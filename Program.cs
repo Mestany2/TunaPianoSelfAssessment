@@ -168,4 +168,52 @@ app.MapGet("/api/artist/{id}", (TunaPianoDbContext db, int id) =>
     return artist;
 });
 
+//Create a Genre
+app.MapPost("/api/genre", (TunaPianoDbContext db, Genre genre) =>
+{
+    db.Genres.Add(genre);
+    db.SaveChanges();
+    return Results.Created($"/api/genre", genre);
+});
+
+//Delete a Genre
+app.MapDelete("/api/genre/{genreId}", (TunaPianoDbContext db, int genreId) =>
+{
+    Genre genre = db.Genres.FirstOrDefault(g => g.Id == genreId);
+    if (genre == null)
+    {
+        return Results.NotFound();
+    }
+    db.Genres.Remove(genre);
+    db.SaveChanges();
+    return Results.NoContent();
+});
+
+//Update a Genre
+app.MapPut("/api/genre/{id}", (TunaPianoDbContext db, int id, Genre genre) =>
+{
+    Genre genreToUpdate = db.Genres.SingleOrDefault(g => g.Id == id);
+    if (genreToUpdate == null)
+    {
+        return Results.NotFound();
+    }
+    genreToUpdate.Description = genre.Description;
+
+
+    db.SaveChanges();
+    return Results.NoContent();
+});
+
+//Get all genres
+app.MapGet("/api/genres", (TunaPianoDbContext db) =>
+{
+    return db.Genres;
+});
+
+//Details view of a single Genre and the songs associated with it
+app.MapGet("/api/genre/{id}", (TunaPianoDbContext db, int id) =>
+{
+    var genre = db.Genres.Where(g => g.Id == id).Include(x => x.songs).FirstOrDefault();
+    return genre;
+});
 app.Run();
