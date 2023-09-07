@@ -2,6 +2,7 @@ using TunaPiano.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http.Json;
+using System.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,11 +40,11 @@ app.UseAuthorization();
 app.MapControllers();
 
 //Create a song
-app.MapPost ("/api/Song", (TunaPianoDbContext db, Song song) =>
+app.MapPost ("/api/newSong", (TunaPianoDbContext db, Song song) =>
 {
     db.Songs.Add(song);
     db.SaveChanges();
-    return Results.Created($"/api/Song/{song.Id}", song);
+    return Results.Created($"/api/newSong/{song.Id}", song);
 });
 
 //Assign a Genre to a song
@@ -115,16 +116,16 @@ app.MapGet("/api/SongsDetails", (TunaPianoDbContext db, int id) =>
 );
 
 //Create an Artist
-app.MapPost("/api/Artist", (TunaPianoDbContext db, Artist artist) =>
+app.MapPost("/api/newArtist", (TunaPianoDbContext db, Artist artist) =>
 {
     db.Artists.Add(artist);
     db.SaveChanges();
-    return Results.Created($"/api/Artist/{artist.Id}", artist);
+    return Results.Created($"/api/newArtist/{artist.Id}", artist);
 });
 
 
 //Delete an Artist
-app.MapDelete("/api/song/{songId}", (TunaPianoDbContext db, int artistId) =>
+app.MapDelete("/api/Artist/{artistId}", (TunaPianoDbContext db, int artistId) =>
 {
     Artist artist = db.Artists.FirstOrDefault(a => a.Id == artistId);
     if (artist == null)
@@ -134,6 +135,37 @@ app.MapDelete("/api/song/{songId}", (TunaPianoDbContext db, int artistId) =>
     db.Artists.Remove(artist);
     db.SaveChanges();
     return Results.NoContent();
+});
+
+//Update an Artist
+app.MapPut("/api/Artist/{id}", (TunaPianoDbContext db, int id, Artist artist) =>
+{
+    Artist artistToUpdate = db.Artists.SingleOrDefault(artist => artist.Id == id);
+    if (artistToUpdate == null)
+    {
+        return Results.NotFound();
+    }
+    artistToUpdate.Name = artist.Name;
+    artistToUpdate.Age = artist.Age;
+    artistToUpdate.Bio = artist.Bio;
+
+
+    db.SaveChanges();
+    return Results.NoContent();
+});
+
+//View a list of all artists
+app.MapGet("/api/allArtists", (TunaPianoDbContext db) =>
+{
+    return db.Artists;
+});
+
+
+//Details view of a single Artist and the songs associated with them
+app.MapGet("/api/artist/{id}", (TunaPianoDbContext db, int id) =>
+{
+    var artist = db.Artists.Where(a => a.Id == id).Include(x => x.Songs).FirstOrDefault();
+    return artist;
 });
 
 app.Run();

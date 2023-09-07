@@ -1,4 +1,6 @@
-﻿namespace TunaPiano.Models
+﻿using System.Threading.Tasks.Sources;
+
+namespace TunaPiano.Models
 {
     public class Artist
     {
@@ -6,5 +8,6 @@
         public string Name { get; set; }
         public int Age { get; set; }
         public string Bio { get; set; }
+        public Song Songs { get; set; }
     }
 }
